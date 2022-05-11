@@ -9,100 +9,100 @@
 // @require      https://raw.githubusercontent.com/123HD123/More-Ore-Mods/master/Notification%2B.js
 // @grant        none
 // ==/UserScript==
+(function() {
+    const MOD_NAME = "View Multiplier";
+    const MOD_STORAGE_DEFAULT = {
+        listeners: {}
+    };
 
-const MOD_NAME = "View Multiplier";
-const MOD_STORAGE_DEFAULT = {
-  listeners: {}
-};
+    const typeMultiplier = {
+        Cloth: -.03,
+        Cardboard: -.03,
+        Plastic: -.03,
+        Leather: 0,
+        Stone: .01,
+        Iron: .03,
+        Silver: .03,
+        Gold: .03,
+        Steel: .08,
+        Platinum: .08,
+        Diamond: .2,
+        Titanium: .2,
+        Adamantite: .2,
+        Alien: .2
+    };
+    const rarityMultiplier = {
+        common: 0,
+        uncommon: .01,
+        rare: .02,
+        unique: .05,
+        epic: .1,
+        legendary: .2,
+        mythic: .3
+    };
+    const multiplierLevel = {
+        WORST: 0.97,
+        BAD: 1.10,
+        AVERAGE: 1.11,
+        AVERAGE2: 1.13,
+        GOOD: 1.40,
+        BEST: 1.50
+    };
 
-const typeMultiplier = {
-    Cloth: -.03,
-    Cardboard: -.03,
-    Plastic: -.03,
-    Leather: 0,
-    Stone: .01,
-    Iron: .03,
-    Silver: .03,
-    Gold: .03,
-    Steel: .08,
-    Platinum: .08,
-    Diamond: .2,
-    Titanium: .2,
-    Adamantite: .2,
-    Alien: .2
-};
-const rarityMultiplier = {
-    common: 0,
-    uncommon: .01,
-    rare: .02,
-    unique: .05,
-    epic: .1,
-    legendary: .2,
-    mythic: .3
-};
+    window.mods = window.mods || {};
 
-const multiplierLevel = {
-    WORST: 0.97,
-    BAD: 1.10,
-    AVERAGE: 1.11,
-    AVERAGE2: 1.13,
-    GOOD: 1.40,
-    BEST: 1.50
-};
+    const Logger = NotificationPlus?.notify || console.log;
+    if (Object.keys(window.mods).includes(MOD_NAME))
+        return Logger(
+            "Warning: Mod named " + MOD_NAME + " has already been loaded",
+            3
+        );
 
-function getLevel(multiplier) {
-    if (multiplier == multiplierLevel.WORST) return "WORST";
-    if (multiplier <= multiplierLevel.BAD) return "BAD";
-    if (multiplier == multiplierLevel.AVERAGE || multiplier == multiplierLevel.AVERAGE2) return "AVERAGE";
-    if (multiplier <= multiplierLevel.GOOD) return "GOOD";
-    if (multiplier == multiplierLevel.BEST) return "BEST";
-}
+    NotificationPlus?.load(MOD_NAME);
 
-window.mods = window.mods || {};
+    window.mods[MOD_NAME] = window.mods[MOD_NAME] || MOD_STORAGE_DEFAULT;
 
-const Logger = NotificationPlus?.notify || console.log;
-if (Object.keys(window.mods).includes(MOD_NAME))
-    return Logger(
-        "Warning: Mod named " + MOD_NAME + " has already been loaded",
-        3
-    );
+    const MOD_STORAGE = window.mods[MOD_NAME];
 
-NotificationPlus?.load(MOD_NAME);
-
-window.mods[MOD_NAME] = window.mods[MOD_NAME] || MOD_STORAGE_DEFAULT;
-
-const MOD_STORAGE = window.mods[MOD_NAME];
-
-if (MOD_STORAGE.listeners != {})
-    Object.keys(MOD_STORAGE.listeners)
-    .forEach(
-        type => MOD_STORAGE.listeners[type]
+    if (MOD_STORAGE.listeners != {})
+        Object.keys(MOD_STORAGE.listeners)
         .forEach(
-            listener => listener.node.removeEventListener(type, listener.function)
-        )
-    );
+            type => MOD_STORAGE.listeners[type]
+            .forEach(
+                listener => listener.node.removeEventListener(type, listener.function)
+            )
+        );
 
-document.addEventListener("DOMNodeInserted", insertMultiplierStat);
-MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
-MOD_STORAGE.listeners.DOMNodeInserted.push({
-    type: "DOMNodeInserted",
-    function: insertMultiplierStat,
-    node: document
-});
-
-function insertMultiplierStat(e) {
-    let node = e.relatedNode;
-    if (node?.className?.includes("tooltip-wrapper")) {
-        node.querySelectorAll(".tooltip-right")?.forEach(tooltip => {
-            let itemName = tooltip.querySelector(".tooltip-item-name")?.children[1];
-            if (itemName == undefined) return;
-            if (tooltip.querySelector(".stat-multiplier") != null) return;
-            let totalMultiplier = (1 + rarityMultiplier[itemName.className] + typeMultiplier[itemName.innerText.split(" ")[0]]).toFixed(2);
-            if (isNaN(totalMultiplier)) return;
-            let stat = document.createElement("p");
-            stat.className = "stat-multiplier";
-            stat.innerHTML = `Multiplier ${getLevel(totalMultiplier)} <span><span class="bold">x${totalMultiplier}</span> <span class="icons positive"></span></span>`;
-            tooltip.querySelector(".item-stats")?.append(stat);
-        });
+    document.addEventListener("DOMNodeInserted", insertMultiplierStat);
+    MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
+    MOD_STORAGE.listeners.DOMNodeInserted.push({
+        type: "DOMNodeInserted",
+        function: insertMultiplierStat,
+        node: document
+    });
+    
+    function insertMultiplierStat(e) {
+        let node = e.relatedNode;
+        if (node?.className?.includes("tooltip-wrapper")) {
+            node.querySelectorAll(".tooltip-right")?.forEach(tooltip => {
+                let itemName = tooltip.querySelector(".tooltip-item-name")?.children[1];
+                if (itemName == undefined) return;
+                if (tooltip.querySelector(".stat-multiplier") != null) return;
+                let totalMultiplier = (1 + rarityMultiplier[itemName.className] + typeMultiplier[itemName.innerText.split(" ")[0]]).toFixed(2);
+                if (isNaN(totalMultiplier)) return;
+                let stat = document.createElement("p");
+                stat.className = "stat-multiplier";
+                stat.innerHTML = `Multiplier ${getLevel(totalMultiplier)} <span><span class="bold">x${totalMultiplier}</span> <span class="icons positive"></span></span>`;
+                tooltip.querySelector(".item-stats")?.append(stat);
+            });
+        }
     }
-}
+    
+    function getLevel(multiplier) {
+        if (multiplier == multiplierLevel.WORST) return "WORST";
+        if (multiplier <= multiplierLevel.BAD) return "BAD";
+        if (multiplier == multiplierLevel.AVERAGE || multiplier == multiplierLevel.AVERAGE2) return "AVERAGE";
+        if (multiplier <= multiplierLevel.GOOD) return "GOOD";
+        if (multiplier == multiplierLevel.BEST) return "BEST";
+    }
+})();

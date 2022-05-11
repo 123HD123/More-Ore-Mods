@@ -97,51 +97,51 @@
     function: overrideNotifications,
     node: document
   });
+  
+  function overrideNotifications(e) {
+    let node = e.target;
+    if (!node?.className?.includes("notification") ||
+      e.relatedNode?.className?.includes("notifications")) return;
+    node.style.visibility = "hidden";
+    setTimeout(() => window.NotificationPlus.notify(node.innerHTML, 2.5), 500);
+  }
+
+  function utils() {
+    return {
+      getRandomNum: function () {
+        var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
+          t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 1,
+          o = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : 0,
+          n = !(arguments.length > 3 && void 0 !== arguments[3]) || arguments[3],
+          r = Math.pow(10, Math.max(o, 0)),
+          i = t * r,
+          a = e * r,
+          c = n ? 1 : 0;
+        return (Math.floor(Math.random() * (i - a + c)) + a) / r
+      },
+      getUUID: function () {
+        return "".concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999));
+      },
+      createEl: function (e) {
+        var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : [],
+          o = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : "",
+          n = document.createElement(e);
+        return t.forEach(function (e) {
+            return n.classList.add(e)
+          }),
+          n.innerHTML = o + "",
+          n
+      },
+      select: (e, t) => t ? t.querySelector("".concat(e)) : document.querySelector("".concat(e)),
+      removeEl: function (e) {
+        var t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
+        null != e && e.parentNode && (t ? (e.style.opacity = e.style.opacity || "1",
+          e.style.transition = "opacity .3s",
+          e.addEventListener("transitionend", function () {
+            e && e.parentNode.removeChild(e)
+          }),
+          e.style.opacity = "0") : e.parentNode.removeChild(e))
+      }
+    };
+  }
 })();
-
-function overrideNotifications(e) {
-  let node = e.target;
-  if (!node?.className?.includes("notification") ||
-    e.relatedNode?.className?.includes("notifications")) return;
-  node.style.visibility = "hidden";
-  setTimeout(() => window.NotificationPlus.notify(node.innerHTML, 2.5), 500);
-}
-
-function utils() {
-  return {
-    getRandomNum: function () {
-      var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
-        t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 1,
-        o = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : 0,
-        n = !(arguments.length > 3 && void 0 !== arguments[3]) || arguments[3],
-        r = Math.pow(10, Math.max(o, 0)),
-        i = t * r,
-        a = e * r,
-        c = n ? 1 : 0;
-      return (Math.floor(Math.random() * (i - a + c)) + a) / r
-    },
-    getUUID: function () {
-      return "".concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999));
-    },
-    createEl: function (e) {
-      var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : [],
-        o = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : "",
-        n = document.createElement(e);
-      return t.forEach(function (e) {
-          return n.classList.add(e)
-        }),
-        n.innerHTML = o + "",
-        n
-    },
-    select: (e, t) => t ? t.querySelector("".concat(e)) : document.querySelector("".concat(e)),
-    removeEl: function (e) {
-      var t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
-      null != e && e.parentNode && (t ? (e.style.opacity = e.style.opacity || "1",
-        e.style.transition = "opacity .3s",
-        e.addEventListener("transitionend", function () {
-          e && e.parentNode.removeChild(e)
-        }),
-        e.style.opacity = "0") : e.parentNode.removeChild(e))
-    }
-  };
-}
