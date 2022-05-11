@@ -99,7 +99,7 @@ function overrideNotifications(e) {
   if (!node?.className?.includes("notification") ||
     e.relatedNode?.className?.includes("notifications")) return;
   node.style.visibility = "hidden";
-  window.NotificationPlus.notify(node.innerHTML, 20);
+  window.NotificationPlus.notify(node.innerHTML, 3);
 }
 
 function utils() {
