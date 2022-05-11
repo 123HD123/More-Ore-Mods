@@ -60,27 +60,28 @@
   document.querySelector(".game-container").appendChild(notifications);
 
   // Create NotificationPlus
-  window.NotificationPlus = window.NotificationPlus || new(class NotificationPlus {
+  window.NotificationPlus = window.NotificationPlus || new (class NotificationPlus {
     notify(msg, seconds) {
       var r = i.getUUID(),
         a = i.createEl("div", ["notification", "notification-default"], msg);
-      a.dataset.notificationUuid = r,
-        i.select(".notifications").append(a),
-        a.getBoundingClientRect(),
-        a.classList.add("show"),
-        setTimeout(function () {
-          var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
-          t && (t.style.bottom = "0"), t.classList.remove("show"), (function () {
-            t.style.transition = "opacity 0.3s ease-out";
-            t.style.opacity = "0";
-            t.ontransitionend = function () {
-              return i.removeEl(t);
-            }
-          })()
-        }, seconds * 1000)
+      a.dataset.notificationUuid = r;
+      i.select(".notifications").append(a);
+
+      a.getBoundingClientRect();
+      a.classList.add("show");
+      setTimeout(function () {
+        var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
+        t && (t?.style.bottom = "0"), t?.classList?.remove("show"), (function () {
+          t?.style.transition = "opacity 0.3s ease-out";
+          t?.style.opacity = "0";
+          t?.ontransitionend = function () {
+            return i.removeEl(t);
+          }
+        })()
+      }, seconds * 1000);
     }
     load(name) {
-      window.Notification.notify("Loading " + name, 1.5);
+      window.NotificationPlus.notify("Loading " + name, 1.5);
     }
   });
 
@@ -99,7 +100,7 @@ function overrideNotifications(e) {
   if (!node?.className?.includes("notification") ||
     e.relatedNode?.className?.includes("notifications")) return;
   node.style.visibility = "hidden";
-  window.NotificationPlus.notify(node.innerHTML, 3);
+  setTimeout(() => window.NotificationPlus.notify(node.innerHTML, 2.5), 500);
 }
 
 function utils() {
