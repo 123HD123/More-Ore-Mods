@@ -71,13 +71,18 @@
       a.classList.add("show");
       setTimeout(function () {
         var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
-        t && (t?.style.bottom = "0"), t?.classList?.remove("show"), (function () {
+        if (t) {
+          // Slide up
+          t?.style.bottom = "0";
+          t?.classList.remove("show");
+
+          // Fade out
           t?.style.transition = "opacity 0.3s ease-out";
           t?.style.opacity = "0";
           t?.ontransitionend = function () {
             return i.removeEl(t);
           }
-        })()
+        }
       }, seconds * 1000);
     }
     load(name) {
