@@ -6,6 +6,7 @@
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
 // @icon         https://syns.studio/more-ore/misc-tinyRock.22ef93dd.ico
+// @require      https://raw.githubusercontent.com/123HD123/More-Ore-Mods/master/Notification%2B.js
 // @grant        none
 // ==/UserScript==
 
@@ -81,7 +82,7 @@ if (MOD_STORAGE.listeners != {})
 
 document.addEventListener("DOMNodeInserted", insertMultiplierStat);
 MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
-MOD_STORAGE.listeners.DOMNodeInserted.append({
+MOD_STORAGE.listeners.DOMNodeInserted.push({
     type: "DOMNodeInserted",
     function: insertMultiplierStat,
     node: document

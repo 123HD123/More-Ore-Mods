@@ -16,12 +16,7 @@
 
   window.mods = window.mods || {};
 
-  const Logger = Notification?.notify || console.log;
-  if (Object.keys(window.mods).includes(MOD_NAME))
-    return Logger(
-      "Warning: Mod named " + MOD_NAME + " has already been loaded",
-      3
-    );
+  if (Object.keys(window.mods).includes(MOD_NAME)) return;
 
   window.mods[MOD_NAME] = window.mods[MOD_NAME] || MOD_STORAGE_DEFAULT;
 
@@ -92,7 +87,7 @@
   // Add override for default notifications
   document.addEventListener("DOMNodeInserted", overrideNotifications);
   MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
-  MOD_STORAGE.listeners.DOMNodeInserted.append({
+  MOD_STORAGE.listeners.DOMNodeInserted.push({
     type: "DOMNodeInserted",
     function: overrideNotifications,
     node: document
