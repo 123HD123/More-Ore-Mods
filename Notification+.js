@@ -71,24 +71,23 @@
       a.classList.add("show");
       setTimeout(function () {
         var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
-        if (t) {
-          // Slide up
-          t?.style.bottom = "0";
-          t?.classList.remove("show");
+        if (!t) return;
+        // Slide up
+        t.style.bottom = "0";
+        t.classList.remove("show");
 
-          // Fade out
-          t?.style.transition = "opacity 0.3s ease-out";
-          t?.style.opacity = "0";
-          t?.ontransitionend = function () {
-            return i.removeEl(t);
-          }
+        // Fade out
+        t.style.transition = "opacity 0.3s ease-out";
+        t.style.opacity = "0";
+        t.ontransitionend = function () {
+          return i.removeEl(t);
         }
       }, seconds * 1000);
     }
     load(name) {
       window.NotificationPlus.notify("Loading " + name, 1.5);
     }
-  });
+  })();
 
   // Add override for default notifications
   document.addEventListener("DOMNodeInserted", overrideNotifications);
