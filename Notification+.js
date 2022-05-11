@@ -8,39 +8,39 @@
 // @icon         https://syns.studio/more-ore/misc-tinyRock.22ef93dd.ico
 // @grant        none
 // ==/UserScript==
+(function () {
+  const MOD_NAME = "Notification Plus";
+  const MOD_STORAGE_DEFAULT = {
+    listeners: {}
+  };
 
-const MOD_NAME = "Notification Plus";
-const MOD_STORAGE_DEFAULT = {
-  listeners: {}
-};
+  window.mods = window.mods || {};
 
-window.mods = window.mods || {};
-
-const Logger = Notification?.notify || console.log;
-if (Object.keys(window.mods).includes(MOD_NAME))
+  const Logger = Notification?.notify || console.log;
+  if (Object.keys(window.mods).includes(MOD_NAME))
     return Logger(
-        "Warning: Mod named " + MOD_NAME + " has already been loaded",
-        3
+      "Warning: Mod named " + MOD_NAME + " has already been loaded",
+      3
     );
 
-window.mods[MOD_NAME] = window.mods[MOD_NAME] || MOD_STORAGE_DEFAULT;
+  window.mods[MOD_NAME] = window.mods[MOD_NAME] || MOD_STORAGE_DEFAULT;
 
-const MOD_STORAGE = window.mods[MOD_NAME];
-if (MOD_STORAGE.listeners != {})
-  Object.keys(MOD_STORAGE.listeners)
-  .forEach(
-    type => MOD_STORAGE.listeners[type]
+  const MOD_STORAGE = window.mods[MOD_NAME];
+  if (MOD_STORAGE.listeners != {})
+    Object.keys(MOD_STORAGE.listeners)
     .forEach(
-      listener => listener.node.removeEventListener(type, listener.function)
-    )
-  );
+      type => MOD_STORAGE.listeners[type]
+      .forEach(
+        listener => listener.node.removeEventListener(type, listener.function)
+      )
+    );
 
-// Get utils
-const i = utils();
+  // Get utils
+  const i = utils();
 
-// Inject styles
-const styles = document.createElement("style");
-styles.innerHTML = `
+  // Inject styles
+  const styles = document.createElement("style");
+  styles.innerHTML = `
 	.notifications {
   	position: absolute;
     right: 0;
@@ -57,58 +57,59 @@ styles.innerHTML = `
   .game-container .notification.show {
   }
 `;
-document.head.appendChild(styles);
+  document.head.appendChild(styles);
 
-// Prepare notification container
-const notifications = document.createElement("div");
-notifications.classList.add("notifications");
-document.querySelector(".game-container").appendChild(notifications);
+  // Prepare notification container
+  const notifications = document.createElement("div");
+  notifications.classList.add("notifications");
+  document.querySelector(".game-container").appendChild(notifications);
 
-// Create NotificationPlus
-window.NotificationPlus = window.NotificationPlus || new (class NotificationPlus {
-  notify(msg, seconds) {
-    var r = i.getUUID(),
-      a = i.createEl("div", ["notification", "notification-default"], msg);
-    a.dataset.notificationUuid = r,
-      i.select(".notifications").append(a),
-      a.getBoundingClientRect(),
-      a.classList.add("show"),
-      setTimeout(function() {
-        var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
-        t && (t.style.bottom = "0"), t.classList.remove("show"), (function() {
-          t.style.transition = "opacity 0.3s ease-out";
-          t.style.opacity = "0";
-          t.ontransitionend = function() {
-            return i.removeEl(t);
-          }
-        })()
-      }, seconds * 1000)
-  }
-  load(name) {
-    window.Notification.notify("Loading " + name, 1.5);
-  }
-});
+  // Create NotificationPlus
+  window.NotificationPlus = window.NotificationPlus || new(class NotificationPlus {
+    notify(msg, seconds) {
+      var r = i.getUUID(),
+        a = i.createEl("div", ["notification", "notification-default"], msg);
+      a.dataset.notificationUuid = r,
+        i.select(".notifications").append(a),
+        a.getBoundingClientRect(),
+        a.classList.add("show"),
+        setTimeout(function () {
+          var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
+          t && (t.style.bottom = "0"), t.classList.remove("show"), (function () {
+            t.style.transition = "opacity 0.3s ease-out";
+            t.style.opacity = "0";
+            t.ontransitionend = function () {
+              return i.removeEl(t);
+            }
+          })()
+        }, seconds * 1000)
+    }
+    load(name) {
+      window.Notification.notify("Loading " + name, 1.5);
+    }
+  });
 
-// Add override for default notifications
-document.addEventListener("DOMNodeInserted", overrideNotifications);
-MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
-MOD_STORAGE.listeners.DOMNodeInserted.append({
+  // Add override for default notifications
+  document.addEventListener("DOMNodeInserted", overrideNotifications);
+  MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
+  MOD_STORAGE.listeners.DOMNodeInserted.append({
     type: "DOMNodeInserted",
     function: overrideNotifications,
     node: document
-});
+  });
+})();
 
 function overrideNotifications(e) {
   let node = e.target;
   if (!node?.className?.includes("notification") ||
-      e.relatedNode?.className?.includes("notifications")) return;
+    e.relatedNode?.className?.includes("notifications")) return;
   node.style.visibility = "hidden";
   window.NotificationPlus.notify(node.innerHTML, 20);
 }
 
 function utils() {
   return {
-    getRandomNum: function() {
+    getRandomNum: function () {
       var e = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0,
         t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : 1,
         o = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : 0,
@@ -119,25 +120,25 @@ function utils() {
         c = n ? 1 : 0;
       return (Math.floor(Math.random() * (i - a + c)) + a) / r
     },
-    getUUID: function() {
+    getUUID: function () {
       return "".concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999), "-").concat(this.getRandomNum(1e3, 9999));
     },
-    createEl: function(e) {
+    createEl: function (e) {
       var t = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : [],
         o = arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : "",
         n = document.createElement(e);
-      return t.forEach(function(e) {
+      return t.forEach(function (e) {
           return n.classList.add(e)
         }),
         n.innerHTML = o + "",
         n
     },
     select: (e, t) => t ? t.querySelector("".concat(e)) : document.querySelector("".concat(e)),
-    removeEl: function(e) {
+    removeEl: function (e) {
       var t = arguments.length > 1 && void 0 !== arguments[1] && arguments[1];
       null != e && e.parentNode && (t ? (e.style.opacity = e.style.opacity || "1",
         e.style.transition = "opacity .3s",
-        e.addEventListener("transitionend", function() {
+        e.addEventListener("transitionend", function () {
           e && e.parentNode.removeChild(e)
         }),
         e.style.opacity = "0") : e.parentNode.removeChild(e))
