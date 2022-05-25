@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Auto Updater
 // @namespace    https://syns.studio/more-ore/
-// @version      1.8
+// @version      1.9
 // @description  Shows an alert when there's an update for the More Ore game, without having to refresh the page
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
