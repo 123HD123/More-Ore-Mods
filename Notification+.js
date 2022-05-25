@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Notification+
 // @namespace    https://syns.studio/more-ore/
-// @version      1.0
+// @version      1.0.1
 // @description  Remakes the more ore notification system with stacking notifications
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -11,7 +11,7 @@
 (function () {
   const MOD_NAME = "Notification Plus";
   const MOD_STORAGE_DEFAULT = {
-    listeners: {}
+    mutationObservers: []
   };
 
   window.mods = window.mods || {};
@@ -21,14 +21,11 @@
   window.mods[MOD_NAME] = window.mods[MOD_NAME] || MOD_STORAGE_DEFAULT;
 
   const MOD_STORAGE = window.mods[MOD_NAME];
-  if (MOD_STORAGE.listeners != {})
-    Object.keys(MOD_STORAGE.listeners)
-    .forEach(
-      type => MOD_STORAGE.listeners[type]
-      .forEach(
-        listener => listener.node.removeEventListener(type, listener.function)
-      )
-    );
+
+  if (MOD_STORAGE.mutationObservers != [])
+        MOD_STORAGE.mutationObservers.forEach(mutationObserver => mutationObserver.disconnect());
+    
+    MOD_STORAGE.mutationObservers = [];
 
   // Get utils
   const i = utils();
@@ -90,20 +87,19 @@
   })();
 
   // Add override for default notifications
-  document.addEventListener("DOMNodeInserted", overrideNotifications);
-  MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
-  MOD_STORAGE.listeners.DOMNodeInserted.push({
-    type: "DOMNodeInserted",
-    function: overrideNotifications,
-    node: document
-  });
+  let m = new MutationObserver(overrideNotifications);
+  m.observe(document.querySelector(".game-container"), {childList: true});
+  MOD_STORAGE.mutationObservers.push(m);
   
-  function overrideNotifications(e) {
-    let node = e.target;
-    if (!node?.className?.includes("notification") ||
-      e.relatedNode?.className?.includes("notifications")) return;
-    node.style.visibility = "hidden";
-    setTimeout(() => window.NotificationPlus.notify(node.innerHTML, 2.5), 500);
+  function overrideNotifications(mutationList, observer) {
+    for(let mutation of mutationList) {
+      if (mutation.addedNodes.keys().length == 0) return;
+      let node = mutation.addedNodes.item(0);
+      if (!node?.className?.includes("notification") ||
+        node.parentNode?.className?.includes("notifications")) return;
+      node.style.visibility = "hidden";
+      setTimeout(() => window.NotificationPlus.notify(node.innerHTML, 2.5), 500);
+    }
   }
 
   function utils() {
