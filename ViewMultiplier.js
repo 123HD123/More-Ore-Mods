@@ -12,7 +12,7 @@
 (function() {
     const MOD_NAME = "View Multiplier";
     const MOD_STORAGE_DEFAULT = {
-        listeners: {}
+        mutationObservers: []
     };
 
     const typeMultiplier = {
@@ -64,39 +64,31 @@
 
     const MOD_STORAGE = window.mods[MOD_NAME];
 
-    if (MOD_STORAGE.listeners != {})
-        Object.keys(MOD_STORAGE.listeners)
-        .forEach(
-            type => MOD_STORAGE.listeners[type]
-            .forEach(
-                listener => listener.node.removeEventListener(type, listener.function)
-            )
-        );
-
-    MOD_STORAGE.listeners = {};
-
-    document.addEventListener("DOMNodeInserted", insertMultiplierStat);
-    MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
-    MOD_STORAGE.listeners.DOMNodeInserted.push({
-        type: "DOMNodeInserted",
-        function: insertMultiplierStat,
-        node: document
-    });
+    if (MOD_STORAGE.mutationObservers != [])
+        MOD_STORAGE.mutationObservers.forEach(mutationObserver => mutationObserver.disconnect());
     
-    function insertMultiplierStat(e) {
-        let node = e.relatedNode;
-        if (node?.className?.includes("tooltip-wrapper")) {
-            node.querySelectorAll(".tooltip-right")?.forEach(tooltip => {
-                let itemName = tooltip.querySelector(".tooltip-item-name")?.children[1];
-                if (itemName == undefined) return;
-                if (tooltip.querySelector(".stat-multiplier") != null) return;
-                let totalMultiplier = (1 + rarityMultiplier[itemName.className] + typeMultiplier[itemName.innerText.split(" ")[0]]).toFixed(2);
-                if (isNaN(totalMultiplier)) return;
-                let stat = document.createElement("p");
-                stat.className = "stat-multiplier";
-                stat.innerHTML = `Multiplier ${getLevel(totalMultiplier)} <span><span class="bold">x${totalMultiplier}</span> <span class="icons positive"></span></span>`;
-                tooltip.querySelector(".item-stats")?.append(stat);
-            });
+    MOD_STORAGE.mutationObservers = [];
+
+    let m = new MutationObserver(insertMultiplierStat);
+    m.observe(document.querySelector(".tooltip-wrapper"), {childList: true});
+    MOD_STORAGE.mutationObservers.push(m);
+    
+    function insertMultiplierStat(mutationList, observer) {
+        for(let mutation of mutationList) {
+            let node = mutation.addedNodes.item(0)?.parentNode;
+            if (node?.className?.includes("tooltip-wrapper")) {
+                node.querySelectorAll(".tooltip-right")?.forEach(tooltip => {
+                    let itemName = tooltip.querySelector(".tooltip-item-name")?.children[1];
+                    if (itemName == undefined) return;
+                    if (tooltip.querySelector(".stat-multiplier") != null) return;
+                    let totalMultiplier = (1 + rarityMultiplier[itemName.className] + typeMultiplier[itemName.innerText.split(" ")[0]]).toFixed(2);
+                    if (isNaN(totalMultiplier)) return;
+                    let stat = document.createElement("p");
+                    stat.className = "stat-multiplier";
+                    stat.innerHTML = `Multiplier ${getLevel(totalMultiplier)} <span><span class="bold">x${totalMultiplier}</span> <span class="icons positive"></span></span>`;
+                    tooltip.querySelector(".item-stats")?.append(stat);
+                });
+            }
         }
     }
     
