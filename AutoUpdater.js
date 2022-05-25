@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Auto Updater
 // @namespace    https://syns.studio/more-ore/
-// @version      1.7
+// @version      1.8
 // @description  Shows an alert when there's an update for the More Ore game, without having to refresh the page
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -32,6 +32,8 @@
         
     if (MOD_STORAGE.intervals != [])
         MOD_STORAGE.intervals.forEach(interval => clearInterval(interval.id));
+
+    MOD_STORAGE.intervals = [];
 
     const URL = "https://syns.studio/more-ore/";
     const scriptsFileRegex = /.*".*(scripts.*.js)"/m;

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - View Multiplier
 // @namespace    https://syns.studio/more-ore/
-// @version      1.1
+// @version      1.2
 // @description  Shows the total multiplier of the item type and rarity in the item tooltip
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -72,6 +72,8 @@
                 listener => listener.node.removeEventListener(type, listener.function)
             )
         );
+
+    MOD_STORAGE.listeners = {};
 
     document.addEventListener("DOMNodeInserted", insertMultiplierStat);
     MOD_STORAGE.listeners.DOMNodeInserted = MOD_STORAGE.listeners.DOMNodeInserted || [];
