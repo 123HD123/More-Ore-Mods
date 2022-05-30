@@ -106,7 +106,7 @@
 
         // Download file
         let a = document.createElement("a");
-        a.download = "MO - Auto Save.txt";
+        a.download = `MO - Auto Save ${utils.getTimeFormat()}.txt`;
         a.href = "data:plain/text;charset=utf-8," + save;
         a.click();
     }
@@ -337,6 +337,17 @@
                 })
                 .replace(/\s+/g, '')
                 .replace(/\./g, '');
+        },
+        getTimeFormat: function() {
+            let d = new Date();
+
+            let dateString = d.toLocaleDateString().replaceAll("/", "-");
+
+            let hours = d.getHours().toString().padStart(2, '0');
+            let minutes = d.getMinutes().toString().padStart(2, '0');
+            let seconds = d.getSeconds().toString().padStart(2, '0');
+
+            return `${dateString}-${hours}.${minutes}.${seconds}`;
         },
         closeTopmostModal: function (event) {
             var targetElement;
