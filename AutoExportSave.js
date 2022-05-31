@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Enhanced Save
 // @namespace    https://syns.studio/more-ore/
-// @version      1.1.0
+// @version      1.1.1
 // @description  Automatically tries to export save to a file every 1+ hours (customizable)
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -61,14 +61,25 @@
     
     let update = false;
     for(let setting of MOD_STORAGE_DEFAULT.settings) {
-        if (Object.entries(MOD_STORAGE_DEFAULT).length != Object.entries(MOD_STORAGE).length) update = true;
-        if (!update) {
-            Object.keys(setting).forEach(key => {
-                if (key == "value") return;
-                if (!Object.keys(MOD_STORAGE).includes(key)) return update = true, void 0;
-                if (MOD_STORAGE_DEFAULT.settings[key] != MOD_STORAGE.settings[key]) return update = true, void 0;
-            });
+        if (MOD_STORAGE_DEFAULT.settings.length != MOD_STORAGE.settings.length) {
+            update = true;
+            break;
         }
+        for(let key of Object.keys(setting)) {
+            if (key == "value") continue;
+            let index = MOD_STORAGE_DEFAULT.settings.indexOf(setting);
+            if (setting[key] != MOD_STORAGE.settings[index][key] && typeof setting[key] != "object") update = true;
+            else if (typeof setting[key] == "object") {
+                for(let i in setting[key]) {
+                    if (setting[key][i] != MOD_STORAGE.settings[index][key][i]) {
+                        update = true;
+                        break;
+                    }
+                }
+            }
+            if (update) break;
+        }
+        if (update) break;
     }
 
     if (update) MOD_STORAGE.settings = MOD_STORAGE_DEFAULT.settings.slice();
