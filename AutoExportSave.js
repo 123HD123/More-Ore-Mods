@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Enhanced Save
 // @namespace    https://syns.studio/more-ore/
-// @version      1.0.0
+// @version      1.1.0
 // @description  Automatically tries to export save to a file every 1+ hours (customizable)
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -17,13 +17,20 @@
         mutationObservers: [],
         settings: [{
                 id: "askBeforeExport",
-                text: "Ask before trying to export",
+                text: "Ask before auto export",
                 value: true,
                 type: "checkbox"
             },
             {
+                id: "autoExportTo",
+                text: "Automatically export to",
+                value: "file",
+                options: ["file", "clipboard"],
+                type: "select"
+            },
+            {
                 id: "exportInterval",
-                text: "Export save every x amount of hours",
+                text: "Export save every x hours",
                 value: 1,
                 type: "range"
             }
@@ -41,7 +48,7 @@
 
     NotificationPlus?.load(MOD_NAME);
 
-    window.mods[MOD_NAME] = window.mods[MOD_NAME] || MOD_STORAGE_DEFAULT;
+    window.mods[MOD_NAME] = window.mods[MOD_NAME] || Object.assign({}, MOD_STORAGE_DEFAULT);
 
     const MOD_STORAGE = window.mods[MOD_NAME];
 
@@ -50,7 +57,21 @@
 
     MOD_STORAGE.intervals = [];
 
-    MOD_STORAGE.settings = JSON.parse(localStorage.getItem(`${MOD_ID}_settings`)) || MOD_STORAGE_DEFAULT.settings;
+    MOD_STORAGE.settings = JSON.parse(localStorage.getItem(`${MOD_ID}_settings`)) ?? MOD_STORAGE_DEFAULT.settings.slice();
+    
+    let update = false;
+    for(let setting of MOD_STORAGE_DEFAULT.settings) {
+        if (Object.entries(MOD_STORAGE_DEFAULT).length != Object.entries(MOD_STORAGE).length) update = true;
+        if (!update) {
+            Object.keys(setting).forEach(key => {
+                if (key == "value") return;
+                if (!Object.keys(MOD_STORAGE).includes(key)) return update = true, void 0;
+                if (MOD_STORAGE_DEFAULT.settings[key] != MOD_STORAGE.settings[key]) return update = true, void 0;
+            });
+        }
+    }
+
+    if (update) MOD_STORAGE.settings = MOD_STORAGE_DEFAULT.settings.slice();
     
     localStorage.setItem(`${MOD_ID}_settings`, JSON.stringify(MOD_STORAGE.settings));
     
@@ -88,27 +109,41 @@
     //window.requestExportSave = requestExportSave;
     function requestExportSave() {
         if (MOD_STORAGE.settings.find(setting => setting.id == "askBeforeExport")?.value) {
+            let autoExportTo = MOD_STORAGE.settings.find(setting => setting.id == "autoExportTo")?.value;
             utils.confirmModal(
                 MOD_NAME,
-                "<p>Do you want to export your save to an external file?<br><span style='font-size: 13px;'>(TIP: the time between auto exports can be modified in the settings)</span></p>",
-                exportSave,
+                `<p>Do you want to export your save to ${autoExportTo == "file" ? "an external file" : "clipboard"}?<br><span style='font-size: 13px;'>(TIP: the time between auto exports can be modified in the settings)</span></p>`,
+                () => exportSave(true),
                 "Export", "Cancel",
                 410,
                 true,
                 true);
-        } else exportSave();
+        } else exportSave(true);
     }
 
-    function exportSave() {
+    function exportSave(auto = false) {
+        let autoExportTo = MOD_STORAGE.settings.find(setting => setting.id == "autoExportTo")?.value;
         document.querySelector(".save-game")?.click();
         // Array.from(document.querySelector(".save-row").children).find(child => child.innerText == "save game")?.click(); // Save game
         let save = localStorage.getItem("s"); // Get save
 
-        // Download file
-        let a = document.createElement("a");
-        a.download = `MO - Auto Save ${utils.getTimeFormat()}.txt`;
-        a.href = "data:plain/text;charset=utf-8," + save;
-        a.click();
+        if (auto === true) {
+            if (autoExportTo == "file") {
+                // Download file
+                let a = document.createElement("a");
+                a.download = `MO - Auto Save ${utils.getTimeFormat()}.txt`;
+                a.href = "data:plain/text;charset=utf-8," + save;
+                a.click();
+            } else if (autoExportTo == "clipboard") {
+                navigator.clipboard.writeText(save);
+            }
+        } else {
+            // Download file
+            let a = document.createElement("a");
+            a.download = `MO - Save ${utils.getTimeFormat()}.txt`;
+            a.href = "data:plain/text;charset=utf-8," + save;
+            a.click();
+        }
     }
 
     function onSettings(mutationList, observer) {
@@ -136,61 +171,93 @@
         let settings = document.querySelector(".modal-settings");
         if (!settings) return;
         if (Array.from(document.querySelectorAll(".setting-section")).find(child => child.children[0]?.innerText == MOD_NAME)) return;
-        let setting = document.createElement("div");
-        setting.classList.add("setting-section");
+        let settingSection = document.createElement("div");
+        settingSection.classList.add("setting-section");
 
         let settingTitle = document.createElement("h3");
         settingTitle.innerText = MOD_NAME;
-        setting.append(settingTitle);
+        settingSection.append(settingTitle);
 
-        for (let option of MOD_STORAGE.settings) {
-            let settingOption = document.createElement("div");
-            settingOption.classList.add("row");
-            settingOption.innerHTML = `<p>${option.text}</p><input type='${option.type}'/>`;
-            if (option.type == "range")
-                settingOption.innerHTML = `<p>${option.text}</p><p>${option.value}</p>`;
-            if (option.type == "checkbox")
-                settingOption.children[1].checked = option.value;
-            settingOption.children[1].onchange = e => {
-                switch(option.type) {
-                    case "checkbox":
-                        option.value = e.target.checked;
-                        break;
-                    default:
-                        option.value = e.target.value;
+        for (let setting of MOD_STORAGE.settings) {
+            let settingRow = document.createElement("div");
+            settingRow.classList.add("row");
+            settingRow.innerHTML = `<p>${setting.text}</p><input type='${setting.type}'/>`;
+            switch(setting.type) {
+                case "range": {
+                    let text = setting.text.replace(" x ", ` ${setting.value} `);
+                    if (setting.value == -1) text = "Auto export is disabled";
+                    if (setting.value == 1) text = setting.text.split(" ").slice(0, setting.text.split(" ").length-2).join(" ") + " hour";
+                    settingRow.innerHTML = `<p>${text}</p>`;
+                    break;
+                }
+                case "checkbox": {
+                    settingRow.children[1].checked = setting.value;
+                    break;
+                }
+                case "select": {
+                    settingRow.innerHTML = `<p>${setting.text}</p><select>${
+                        setting.options.map(option => `<option value="${option}">${option}</option>`).join("")
+                    }</select>`;
+                    break;
+                }
+            }
+                
+            if (settingRow.children[1])
+                settingRow.children[1].onchange = e => {
+                    switch(setting.type) {
+                        case "checkbox":
+                            setting.value = e.target.checked;
+                            break;
+                        default:
+                            setting.value = e.target.value;
+                    };
+                    localStorage.setItem(`${MOD_ID}_settings`, JSON.stringify(MOD_STORAGE.settings));
                 };
-                localStorage.setItem(`${MOD_ID}_settings`, JSON.stringify(MOD_STORAGE.settings));
-            };
-            setting.append(settingOption);
+            settingSection.append(settingRow);
 
-            if (option.type == "range") {
+            if (setting.type == "range") {
                 let settingSlider = document.createElement("input");
                 settingSlider.type = "range";
                 settingSlider.min = "-1";
                 settingSlider.max = "12";
                 settingSlider.step = "1";
-                settingSlider.value = option.value == .5 ? 0 : option.value;
+                settingSlider.value = setting.value == .5 ? 0 : setting.value;
                 settingSlider.style.width = "100%";
                 settingSlider.onchange = _ => {
-                    settingOption.children[1].innerText = parseInt(settingSlider.value) || 0.5;
-                    option.value = parseInt(settingSlider.value) || .5;
+                    setting.value = parseInt(settingSlider.value) || .5;
+                    let text = setting.text.replace(" x ", ` ${setting.value} `);
+                    if (setting.value == -1) text = "Auto export is disabled";
+                    if (setting.value == 1) text = setting.text.split(" ").slice(0, setting.text.split(" ").length-2).join(" ") + " hour";
+                    settingRow.innerHTML = `<p>${text}</p>`;
                     localStorage.setItem(`${MOD_ID}_settings`, JSON.stringify(MOD_STORAGE.settings));
 
                     clearInterval(MOD_STORAGE.intervals[0]);
                     MOD_STORAGE.intervals = [];
-                    if (option.value == -1) return;
-                    MOD_STORAGE.intervals.push(setInterval(requestExportSave, option.value * 60 * 60 * 1000));
+                    if (setting.value == -1) return;
+                    MOD_STORAGE.intervals.push(setInterval(requestExportSave, setting.value * 60 * 60 * 1000));
                 };
-                setting.append(settingSlider);
+                settingSection.append(settingSlider);
             }
         }
-        settings.querySelector(".modal-content").insertBefore(setting, Array.from(settings.querySelector(".modal-content").children).find(section => section.querySelector("h3")?.innerText == "Saves"));
+        settings.querySelector(".modal-content").insertBefore(settingSection, Array.from(settings.querySelector(".modal-content").children).find(section => section.querySelector("h3")?.innerText == "Saves"));
     }
 
     function modifyExportSave() {
-        let a = Array.from(document.querySelectorAll(".setting-section").values())
-        .find(section => section.children[2]?.children[0]?.innerText == "export save")?.children[2].children[0];
-        a.onclick = () => utils.choiceModal(
+        let savesSection = Array.from(document.querySelectorAll(".setting-section").values())
+        .find(section => section.children[0].innerText == "Saves");
+        let exportFile = savesSection.children[1].children[0];
+        let exportClipboard = savesSection.children[2].children[0];
+
+        exportFile.innerHTML = "export (file)";
+        exportFile.onclick = exportSave;
+
+        exportClipboard.innerHTML = "export (clipboard)";
+        exportClipboard.onclick = () => {
+            document.querySelector(".save-game")?.click();
+            //Array.from(document.querySelector(".save-row").children).find(child => child.innerText == "save game")?.click(); // Save game
+            navigator.clipboard.writeText(localStorage.getItem("s"));
+        };
+        /*a.onclick = () => utils.choiceModal(
             MOD_NAME,
             "<p>Would you like to export to <b>file</b> or <b>clipboard</b>?</p>",
             {text: "Clipboard", callback: () => {
@@ -199,7 +266,7 @@
             }},
             {text: "File", callback: exportSave},
             410,
-            true);
+            true);*/
     }
 
     function insertUploadSave(node) {
