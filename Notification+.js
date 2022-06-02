@@ -118,7 +118,7 @@
       MOD_STORAGE.notifications.push({text: msg, timeout, amount: 1, ref: a});
     }
     load(name) {
-      NotificationPlus.notify("Loading " + name, 1.5);
+      window.NotificationPlus.notify("Loading " + name, 1.5);
     }
   })();
 
