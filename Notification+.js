@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Notification+
 // @namespace    https://syns.studio/more-ore/
-// @version      1.0.1
+// @version      1.0.2
 // @description  Remakes the more ore notification system with stacking notifications
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -11,7 +11,8 @@
 (function () {
   const MOD_NAME = "Notification Plus";
   const MOD_STORAGE_DEFAULT = {
-    mutationObservers: []
+    mutationObservers: [],
+    notifications: []
   };
 
   window.mods = window.mods || {};
@@ -23,9 +24,9 @@
   const MOD_STORAGE = window.mods[MOD_NAME];
 
   if (MOD_STORAGE.mutationObservers != [])
-        MOD_STORAGE.mutationObservers.forEach(mutationObserver => mutationObserver.disconnect());
+      MOD_STORAGE.mutationObservers.forEach(mutationObserver => mutationObserver.disconnect());
     
-    MOD_STORAGE.mutationObservers = [];
+  MOD_STORAGE.mutationObservers = [];
 
   // Get utils
   const i = utils();
@@ -59,6 +60,39 @@
   // Create NotificationPlus
   window.NotificationPlus = window.NotificationPlus || new (class NotificationPlus {
     notify(msg, seconds) {
+      let notification = MOD_STORAGE.notifications.find(({ text }) => text == msg);
+      if (notification != undefined && document.body.contains(notification.ref)) {
+        clearTimeout(notification.timeout);
+        notification.amount++;
+        notification.ref.innerHTML = msg + " x" + notification.amount;
+        let r = notification.ref.dataset.notificationUuid;
+        notification.timeout = setTimeout(function () {
+          var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
+          if (!t) {
+            MOD_STORAGE.notifications.splice(MOD_STORAGE.notifications.findIndex(({ text }) => text == msg), 1);
+            return;
+          }
+          // Slide up
+          t.style.bottom = "0";
+          t.classList.remove("show");
+  
+          // Fade out
+          t.style.transition = "opacity 0.3s ease-out";
+          t.style.opacity = "0";
+          t.ontransitionend = function () {
+            MOD_STORAGE.notifications.splice(MOD_STORAGE.notifications.findIndex(({ text }) => text == msg), 1);
+            return i.removeEl(t);
+          }
+        }, seconds * 1000);
+
+        let index = MOD_STORAGE.notifications.indexOf(notification);
+        MOD_STORAGE.notifications[index] = notification;
+        return;
+      } else if (notification != undefined && !document.body.contains(notification.ref)) {
+        clearTimeout(notification.timeout);
+        MOD_STORAGE.notifications.splice(MOD_STORAGE.notifications.indexOf(notification), 1);
+      }
+
       var r = i.getUUID(),
         a = i.createEl("div", ["notification", "notification-default"], msg);
       a.dataset.notificationUuid = r;
@@ -66,7 +100,7 @@
 
       a.getBoundingClientRect();
       a.classList.add("show");
-      setTimeout(function () {
+      let timeout = setTimeout(function () {
         var t = i.select('[data-notification-uuid="'.concat(r, '"]'));
         if (!t) return;
         // Slide up
@@ -77,12 +111,14 @@
         t.style.transition = "opacity 0.3s ease-out";
         t.style.opacity = "0";
         t.ontransitionend = function () {
+          MOD_STORAGE.notifications.splice(MOD_STORAGE.notifications.findIndex(({ text }) => text == msg), 1);
           return i.removeEl(t);
         }
       }, seconds * 1000);
+      MOD_STORAGE.notifications.push({text: msg, timeout, amount: 1, ref: a});
     }
     load(name) {
-      window.NotificationPlus.notify("Loading " + name, 1.5);
+      NotificationPlus.notify("Loading " + name, 1.5);
     }
   })();
 
@@ -96,9 +132,9 @@
       if (mutation.addedNodes.keys().length == 0) return;
       let node = mutation.addedNodes.item(0);
       if (!node?.className?.includes("notification") ||
-        node.parentNode?.className?.includes("notifications")) return;
-      node.style.visibility = "hidden";
-      setTimeout(() => window.NotificationPlus.notify(node.innerHTML, 2.5), 500);
+        node?.parentNode?.className?.includes("notifications")) return;
+      node.remove();
+      NotificationPlus.notify(node.innerHTML, 2.5)
     }
   }
 
