@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Auto Updater
 // @namespace    https://syns.studio/more-ore/
-// @version      1.10
+// @version      1.10.1
 // @description  Shows an alert when there's an update for the More Ore game, without having to refresh the page
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -59,10 +59,10 @@
             console.log(stamp + "Checking for updates...");
             let versionRegex = /\)]={+'(.*?)':{'rel/;
             let version = sRes.match(versionRegex)[1].replace("\\x20", " ");
-            if (document.querySelector(".version").innerText.replace("v. ", "") !== version) alert(`New version (refresh): ${version}`);
+            if (document.querySelector(".version").innerText.replace("v. ", "") !== version) utils.buildModal(MOD_NAME, `<p>New version (refresh): ${version}</p>`, null, 365, true, true);
             else {
                 console.log(stamp + "No updates found!");
-                alert("Possible hotfix detected (small update with purely bugfixes)");
+                utils.buildModal(MOD_NAME, "<p>Possible hotfix detected<br>(small update with purely bugfixes)</p>", null, 365, true, true);
             }
         });
     }
@@ -78,4 +78,95 @@
         xmlHttp.setRequestHeader("Expires", "0");
         xmlHttp.send(null);
     }
+
+    const utils = {
+        buildModal: function (title, innerHTML) {
+            //this.closeTopmostModal();
+            var confirmMessage =
+                arguments.length > 2 && void 0 !== arguments[2] ?
+                arguments[2] :
+                'Ok',
+                customWidth = arguments.length > 3 ? arguments[3] : void 0,
+                center = arguments.length > 4 ? arguments[4] : void 0,
+                nonBlocking = arguments.length > 5 ? arguments[5] : void 0;
+            let wrapper = this.createEl('div', ['modal-wrapper']);
+            if (nonBlocking) {
+                wrapper.style.margin = "auto";
+                wrapper.style.width = "fit-content";
+                wrapper.style.height = "fit-content";
+                wrapper.style.background = "transparent";
+            }
+            wrapper.addEventListener('click', this.closeTopmostModal);
+            var modal = this.createEl('div', [
+                'modal'
+            ]);
+            customWidth && (modal.style.width = customWidth + 'px');
+            center && (modal.style.textAlign = 'center');
+            var titleElement = this.createEl('h2', ['modal-title'], title);
+            modal.append(titleElement);
+            modal.append(this.buildCloseButton());
+            var contentElement = this.createEl('div', ['modal-content']);
+            contentElement.innerHTML = innerHTML;
+            modal.append(contentElement);
+            var actionsContainer = this.createEl('div', ['modal-actions']),
+                confirmAction = this.createEl('button', ['modal-action'], confirmMessage);
+            confirmAction.onclick = function () {
+                this.closeTopmostModal();
+            }.bind(this);
+            actionsContainer.append(confirmAction);
+            modal.append(actionsContainer);
+            wrapper.append(modal);
+            document.querySelector(".page-container").append(wrapper);
+        },
+        buildCloseButton: function () {
+            var position =
+                arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 10,
+              dark = arguments.length > 1 && void 0 !== arguments[1] && arguments[1],
+              closeBtn = this.createEl('img', ['close-btn'])
+            return (
+              (closeBtn.src = './images/misc-close.svg'),
+              (closeBtn.style.right = position + 'px'),
+              (closeBtn.style.top = position + 'px'),
+              dark && (closeBtn.style.filter = 'brightness(0)'),
+              closeBtn.addEventListener('click', function () {
+                return t.closeTopmostModal()
+              }),
+              closeBtn
+            )
+        },
+        createEl: function (tag) {
+            var classes =
+                arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : [],
+                innerHTML =
+                arguments.length > 2 && void 0 !== arguments[2] ? arguments[2] : '',
+                element = document.createElement(tag);
+            return (
+                classes.forEach(function (clazz) {
+                    return element.classList.add(clazz)
+                }),
+                (element.innerHTML = innerHTML + ''),
+                element
+            );
+        },
+        closeTopmostModal: function (event) {
+            var targetElement;
+            if (event) {
+                var targetEl = event.target;
+                targetElement = targetEl.classList.contains('modal-wrapper') ? targetEl : null;
+            } else {
+                var allWrappers = document.querySelectorAll('.modal-wrapper');
+                allWrappers.length > 0 && (targetElement = allWrappers[allWrappers.length - 1]);
+            }
+            if (targetElement) {
+                targetElement.style.pointerEvents = 'none';
+                new Howl({
+                    src: ['./sounds/misc.wav'],
+                    volume: .1 * volume
+                }).play();
+                var modal = targetElement.children[0];
+                modal.style.animation = 'fadeOutDown .15s ease-out forwards';
+                modal.addEventListener('animationend', () => targetElement.parentNode.removeChild(targetElement));
+            }
+        }
+    };
 })();

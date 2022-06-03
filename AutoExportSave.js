@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Enhanced Save
 // @namespace    https://syns.studio/more-ore/
-// @version      1.1.1
+// @version      1.1.2
 // @description  Automatically tries to export save to a file every 1+ hours (customizable)
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -100,23 +100,6 @@
     m.observe(document.querySelector(".page-container"), {childList: true});
     MOD_STORAGE.mutationObservers.push(m);
 
-    m = new MutationObserver(onLoad);
-    m.observe(document.body, {childList: true});
-
-    function onLoad(mutationList, observer) {
-        for(let mutation of mutationList) {
-            if (mutation.removedNodes.keys().length == 0) return;
-            let node = mutation.removedNodes.item(0);
-            if (node?.className !== "loading-screen") return;
-
-            // Get volume
-            document.querySelector(".icon-settings")?.click();
-            window.volume = Array.from(document.querySelectorAll(".setting-section")).find(setting => setting.children[0]?.innerText == "Volume").children[2].value;
-            
-            document.querySelector(".close-btn")?.click();
-            observer.disconnect();
-        }
-    }
     //window.requestExportSave = requestExportSave;
     function requestExportSave() {
         if (MOD_STORAGE.settings.find(setting => setting.id == "askBeforeExport")?.value) {
