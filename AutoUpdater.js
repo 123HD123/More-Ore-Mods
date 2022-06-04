@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Auto Updater
 // @namespace    https://syns.studio/more-ore/
-// @version      1.10.1
+// @version      1.10.2
 // @description  Shows an alert when there's an update for the More Ore game, without having to refresh the page
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -83,7 +83,7 @@
         buildModal: function (title, innerHTML) {
             //this.closeTopmostModal();
             var confirmMessage =
-                arguments.length > 2 && void 0 !== arguments[2] ?
+                arguments.length > 2 && void 0 != arguments[2] ?
                 arguments[2] :
                 'Ok',
                 customWidth = arguments.length > 3 ? arguments[3] : void 0,
