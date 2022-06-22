@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         More Ore - Auto Updater
 // @namespace    https://syns.studio/more-ore/
-// @version      1.10.2
+// @version      1.10.3
 // @description  Shows an alert when there's an update for the More Ore game, without having to refresh the page
 // @author       123HD123
 // @match        https://syns.studio/more-ore/
@@ -57,7 +57,7 @@
             let date = new Date();
             let stamp = `[${date.toTimeString().split(" ")[0]}] `;
             console.log(stamp + "Checking for updates...");
-            let versionRegex = /\)]={+'(.*?)':{'rel/;
+            let versionRegex = /\)?].?=.?{\s*'(.*?)':\s?{\s*'rel/;
             let version = sRes.match(versionRegex)[1].replace("\\x20", " ");
             if (document.querySelector(".version").innerText.replace("v. ", "") !== version) utils.buildModal(MOD_NAME, `<p>New version (refresh): ${version}</p>`, null, 365, true, true);
             else {
